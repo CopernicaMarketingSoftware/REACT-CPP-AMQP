@@ -33,9 +33,7 @@ namespace React { namespace AMQP {
 void ConnectionHandler::onData(::AMQP::Connection *connection, const char *buffer, size_t size)
 {
     // write data to the socket
-    std::cout << "<< (";
-    std::cout << static_cast<Connection*>(connection)->_output.send(buffer, size);
-    std::cout << "): " << std::string(buffer, size) << std::endl;
+    static_cast<Connection*>(connection)->::React::Tcp::Out::send(buffer, size);
 }
 
 /**
@@ -68,6 +66,9 @@ void ConnectionHandler::onConnected(::AMQP::Connection *connection)
  */
 void ConnectionHandler::onClosed(::AMQP::Connection *connection)
 {
+    // the socket should be closed now
+    static_cast<Connection*>(connection)->::React::Tcp::Connection::close();
+
     // cast to the correct connection and pass on
     onClosed(static_cast<Connection*>(connection));
 }

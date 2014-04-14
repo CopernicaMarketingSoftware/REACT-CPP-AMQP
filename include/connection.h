@@ -20,6 +20,8 @@ class ConnectionHandler;
  *  Connection class
  */
 class Connection :
+    private React::Tcp::Connection,
+    private React::Tcp::Out,
     public  ::AMQP::Connection
 {
 private:
@@ -29,19 +31,15 @@ private:
     React::Loop *_loop;
 
     /**
-     *  The socket connection to the server
-     */
-    React::Tcp::Connection _socket;
-
-    /**
-     *  The output buffer for sending data
-     */
-    React::Tcp::Out _output;
-
-    /**
      *  The handler that must be notified
      */
     React::AMQP::ConnectionHandler *_handler;
+
+    /**
+     *  Buffer for incoming data that cannot be
+     *  handled straight-away (e.g. half frames)
+     */
+    std::string _buffer;
 public:
     /**
      *  Constructor
@@ -54,36 +52,49 @@ public:
      *  @param  vhost       the vhost to connect to
      */
     Connection(React::Loop *loop, React::AMQP::ConnectionHandler *handler, const Net::Ip& host, uint16_t port, const ::AMQP::Login& login, const std::string& vhost) :
+        React::Tcp::Connection(loop, host, port),
+        React::Tcp::Out(this),
         ::AMQP::Connection(handler, login, vhost),
         _loop(loop),
-        _socket(loop, host, port),
-        _output(&_socket),
         _handler(handler)
     {
-        std::cout << "Installing data handler using onData" << std::endl;
-
-        // we have to check for a connection
-        _socket.onConnected([](const char *error) {
-            if (error) std::cerr << "Could not connect: " << error << std::endl;
-            else std::cout << "Now connected" << std::endl;
+        // wait for the connection to be established
+        onConnected([this](const char *error) {
+            // check for errors
+            if (error) _handler->onError(this, error);
         });
 
         // parse incoming data
-        _socket.onData([this](const void *buf, size_t size) {
-            std::cout << ">> " << std::string(static_cast<const char *>(buf), size) << std::endl;
+        onData([this](const void *buf, size_t size) {
+            // do we have an existing buffer from before?
+            if (!_buffer.empty())
+            {
+                // add the new data to the buffer
+                _buffer.append(static_cast<const char *>(buf), size);
 
-            // pass to AMQP (TODO: handle chunked data)
-            parse(static_cast<const char *>(buf), size);
+                // parse all data we have now and remove what is parsed
+                _buffer.erase(0, parse(_buffer.c_str(), _buffer.size()));
+            }
+            else
+            {
+                // pass to AMQP
+                auto parsed = parse(static_cast<const char *>(buf), size);
+
+                // store the remaining bytes in the buffer
+                _buffer.append(static_cast<const char *>(buf) + parsed, size - parsed);
+            }
 
             // we would like to continue receiving data
             return true;
         });
+    }
 
-        _socket.onLost([]() {
-            std::cout << "Lost connection to AMQP :(" << std::endl;
-        });
-
-        std::cout << "Data handler installed" << std::endl;
+    /**
+     *  Close the connection
+     */
+    bool close()
+    {
+        return this->::AMQP::Connection::close();
     }
 
     // we are friends with the handler
