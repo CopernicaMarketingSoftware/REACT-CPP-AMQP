@@ -21,7 +21,7 @@ class Handler : public React::AMQP::ConnectionHandler
      *  @param  connection  the connection that triggered an error
      *  @param  message     a description of the error
      */
-    virtual void onError(Connection *connection, const std::string& message)
+    virtual void onError(React::AMQP::Connection *connection, const std::string& message)
     {
         // report the error
         std:cerr << "Connection error: " << message << std::endl;
@@ -32,7 +32,7 @@ class Handler : public React::AMQP::ConnectionHandler
      *
      *  @param  connection  the connection now logged in
      */
-    virtual void onConnected(Connection *connection)
+    virtual void onConnected(React::AMQP::Connection *connection)
     {
         // report that we are now connected
         std::cout << "Connected succesfully" << std::endl;
@@ -46,7 +46,7 @@ class Handler : public React::AMQP::ConnectionHandler
      *
      *  @param  connection  the connection now closed
      */
-    virtual void onClosed(Connection *connection) {
+    virtual void onClosed(React::AMQP::Connection *connection) {
         // report that the connection closed down
         std::cout << "Connection to AMQP closed" << std::endl;
     }
