@@ -24,6 +24,19 @@
 namespace React { namespace AMQP {
 
 /**
+ *  Set a function to be executed after a given timeout.
+ *
+ *  @param  connection  the connection triggering the timeout
+ *  @param  timeout     number of seconds to wait
+ *  @param  callback    function to execute once time runs out
+ */
+void ConnectionHandler::setTimeout(::AMQP::Connection *connection, double seconds, const std::function<void()>& callback)
+{
+    // set timeout on the loop
+    static_cast<Connection*>(connection)->_loop->onTimeout(seconds, callback);
+}
+
+/**
  *  Send data over the network
  *
  *  @param  connection  the connection creating the output

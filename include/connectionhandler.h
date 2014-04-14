@@ -21,6 +21,15 @@ class ConnectionHandler : public ::AMQP::ConnectionHandler
 {
 private:
     /**
+     *  Set a function to be executed after a given timeout.
+     *
+     *  @param  connection  the connection triggering the timeout
+     *  @param  timeout     number of seconds to wait
+     *  @param  callback    function to execute once time runs out
+     */
+    void setTimeout(::AMQP::Connection *connection, double seconds, const std::function<void()>& callback) override;
+
+    /**
      *  Send data over the network
      *
      *  @param  connection  the connection creating the output
