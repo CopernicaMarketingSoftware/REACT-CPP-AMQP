@@ -25,18 +25,18 @@ void MyConnection::onConnected(React::AMQP::Connection *connection)
     std::cout << "connected" << std::endl;
 
     // create a new channel
-    _channel = std::unique_ptr<AMQP::Channel>(new AMQP::Channel(&_connection));
+    _channel = std::unique_ptr<React::AMQP::Channel>(new React::AMQP::Channel(&_connection));
 
     // watch for the channel becoming ready
-    _channel->onReady([](AMQP::Channel *channel) {
+    _channel->onReady([this]() {
         // show that we are ready
-        std::cout << "AMQP channel ready, id: " << (int) channel->id() << std::endl;
+        std::cout << "AMQP channel ready, id: " << (int) _channel->id() << std::endl;
     });
 
     // and of course for channel errors
-    _channel->onError([this](AMQP::Channel *channel, const std::string& message) {
+    _channel->onError([this](const std::string& message) {
         // inform the user of the error
-        std::cerr << "AMQP channel error on channel " << channel->id() << ": " << message << std::endl;
+        std::cerr << "AMQP channel error on channel " << _channel->id() << ": " << message << std::endl;
 
         // delete the channel
         _channel = nullptr;
@@ -46,25 +46,25 @@ void MyConnection::onConnected(React::AMQP::Connection *connection)
     });
 
     // declare a queue and let us know when it succeeds
-    _channel->declareQueue("my_queue").onSuccess([](AMQP::Channel *channel, const std::string &name, uint32_t messageCount, uint32_t consumerCount){
+    _channel->declareQueue("my_queue").onSuccess([](const std::string &name, uint32_t messageCount, uint32_t consumerCount){
         // queue was successfully declared
         std::cout << "AMQP Queue declared with name '" << name << "', " << messageCount << " messages and " << consumerCount << " consumer" << std::endl;
     });
 
     // also declare an exchange
-    _channel->declareExchange("my_exchange", AMQP::direct).onSuccess([](AMQP::Channel *channel) {
+    _channel->declareExchange("my_exchange", AMQP::direct).onSuccess([]() {
         // exchange successfully declared
         std::cout << "AMQP exchange declared" << std::endl;
     });
 
     // bind the queue to the exchange
-    _channel->bindQueue("my_exchange", "my_queue", "key").onSuccess([](AMQP::Channel *channel) {
+    _channel->bindQueue("my_exchange", "my_queue", "key").onSuccess([]() {
         // queue successfully bound to exchange
         std::cout << "AMQP Queue bound" << std::endl;
     });
 
     // set quality of service
-    _channel->setQos(1).onSuccess([](AMQP::Channel *channel) {
+    _channel->setQos(1).onSuccess([]() {
         // quality of service successfully set
         std::cout << "AMQP Quality of Service set" << std::endl;
     });
@@ -76,7 +76,7 @@ void MyConnection::onConnected(React::AMQP::Connection *connection)
         std::cerr << "Unable to publish message" << std::endl;
 
         // close the channel
-        _channel->close().onSuccess([this](AMQP::Channel *channel) {
+        _channel->close().onSuccess([this]() {
             // also close the connection
             _connection.close();
         });
@@ -84,7 +84,7 @@ void MyConnection::onConnected(React::AMQP::Connection *connection)
 
     // consume the message we just published
     _channel->consume("my_queue", "my_consumer", AMQP::exclusive)
-    .onReceived([this](AMQP::Channel *channel, const AMQP::Message &message, uint64_t deliveryTag, const std::string &consumerTag, bool redelivered) {
+    .onReceived([this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered) {
         // show the message data
         std::cout << "AMQP consumed: " << message.message() << std::endl;
 
@@ -92,19 +92,19 @@ void MyConnection::onConnected(React::AMQP::Connection *connection)
         _channel->ack(deliveryTag);
 
         // and stop consuming (there is only one message anyways)
-        _channel->cancel("my_consumer").onSuccess([](AMQP::Channel *channel, const std::string& tag) {
+        _channel->cancel("my_consumer").onSuccess([](const std::string& tag) {
             // we successfully stopped consuming
             std::cout << "Stopped consuming under tag " << tag << std::endl;
         });
 
         // unbind the queue again
-        _channel->unbindQueue("my_exchange", "my_queue", "key").onSuccess([](AMQP::Channel *channel) {
+        _channel->unbindQueue("my_exchange", "my_queue", "key").onSuccess([]() {
             // queueu successfully unbound
             std::cout << "Queue unbound" << std::endl;
         });
 
         // the queue should now be empty, so we can delete it
-        _channel->removeQueue("my_queue").onSuccess([](AMQP::Channel *channel, uint32_t messageCount) {
+        _channel->removeQueue("my_queue").onSuccess([](uint32_t messageCount) {
             // queue was removed, it should have been empty, so messageCount should be 0
             if (messageCount) std::cerr << "Removed queue which should have been empty but contained " << messageCount << " messages" << std::endl;
 
@@ -113,13 +113,13 @@ void MyConnection::onConnected(React::AMQP::Connection *connection)
         });
 
         // also remove the exchange
-        _channel->removeExchange("my_exchange").onSuccess([](AMQP::Channel *channel) {
+        _channel->removeExchange("my_exchange").onSuccess([]() {
             // exchange was successfully removed
             std::cout << "Removed exchange" << std::endl;
         });
 
         // everything done, close the channel
-        _channel->close().onSuccess([this](AMQP::Channel *channel) {
+        _channel->close().onSuccess([this]() {
             // channel was closed
             std::cout << "Channel closed" << std::endl;
 
@@ -127,9 +127,9 @@ void MyConnection::onConnected(React::AMQP::Connection *connection)
             _connection.close();
         });
     })
-    .onSuccess([](AMQP::Channel *channel, const std::string& tag) {
+    .onSuccess([]() {
         // consumer was started
-        std::cout << "Started consuming under tag " << tag << std::endl;
+        std::cout << "Started consuming" << std::endl;
     });
 }
 
@@ -159,7 +159,7 @@ void MyConnection::onClosed(React::AMQP::Connection *connection)
  *  @param  connection      The connection that entered the error state
  *  @param  message         Error message
  */
-void MyConnection::onError(React::AMQP::Connection *connection, const std::string &message)
+void MyConnection::onError(React::AMQP::Connection *connection, const char *message)
 {
     // report error
     std::cout << "AMQP Connection error: " << message << std::endl;

@@ -33,7 +33,7 @@ private:
      *  The AMQP channel
      *  @var    Channel
      */
-    std::unique_ptr<AMQP::Channel> _channel;
+    std::unique_ptr<React::AMQP::Channel> _channel;
 
     /**
      *  Method that is called when the connection to AMQP was closed
@@ -51,7 +51,7 @@ private:
      *  @param  connection      The connection that entered the error state
      *  @param  message         Error message
      */
-    void onError(React::AMQP::Connection *connection, const std::string &message) override;
+    void onError(React::AMQP::Connection *connection, const char *message) override;
 
     /**
      *  Method that is called when the login attempt succeeded. After this method

@@ -18,3 +18,4 @@
  */
 #include <reactcpp/amqp/connectionhandler.h>
 #include <reactcpp/amqp/connection.h>
+#include <reactcpp/amqp/channel.h>
