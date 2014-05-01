@@ -66,6 +66,6 @@ public:
      *  Constructor
      *  @param  ip
      */
-    MyConnection(React::Loop *loop, const char *ip);
+    MyConnection(React::Loop *loop, const std::string& host);
 };
 

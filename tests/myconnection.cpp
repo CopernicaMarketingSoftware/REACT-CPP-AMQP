@@ -9,9 +9,9 @@
 /**
  *  Constructor
  */
-MyConnection::MyConnection(React::Loop *loop, const char *ip) :
+MyConnection::MyConnection(React::Loop *loop, const std::string& host) :
     _loop(loop),
-    _connection(loop, this, ip, 5672, AMQP::Login("guest", "guest"), "/"),
+    _connection(loop, this, host, 5672, AMQP::Login("guest", "guest"), "/"),
     _channel(nullptr)
 {}
 
@@ -92,7 +92,7 @@ void MyConnection::onConnected(React::AMQP::Connection *connection)
         _channel->ack(deliveryTag);
 
         // and stop consuming (there is only one message anyways)
-        _channel->cancel("my_consumer").onSuccess([](const std::string& tag) {
+        _channel->cancel("my_consumer").onSuccess([this](const std::string& tag) {
             // we successfully stopped consuming
             std::cout << "Stopped consuming under tag " << tag << std::endl;
         });
