@@ -195,7 +195,7 @@ private:
     void onError(::AMQP::Connection *connection, const char *message) override
     {
         // send to the handler
-        _handler->onError(this, message);
+        if (_handler) _handler->onError(this, message);
     }
 
     /**
@@ -206,7 +206,7 @@ private:
     void onConnected(::AMQP::Connection *connection) override
     {
         // send to the handler
-        _handler->onConnected(this);
+        if (_handler) _handler->onConnected(this);
     }
 
     /**
@@ -217,7 +217,7 @@ private:
     void onClosed(::AMQP::Connection *connection) override
     {
         // send to the handler
-        _handler->onClosed(this);
+        if (_handler) _handler->onClosed(this);
     }
 public:
     /**
@@ -238,7 +238,7 @@ public:
         _connection(this, login, vhost)
     {
         // wait for the connection to be established
-        _socket->onConnected([this](const char *error) {
+        if (_handler) _socket->onConnected([this](const char *error) {
             // check for errors
             if (error) _handler->onError(this, error);
         });
@@ -271,14 +271,14 @@ public:
             // check for errors
             if (error)
             {
-                _handler->onError(this, error);
+                if (_handler) _handler->onError(this, error);
                 return;
             }
 
             // check whether any addresses were found
             if (ips.empty())
             {
-                _handler->onError(this, std::string("No records found for host ").append(host).c_str());
+                if (_handler) _handler->onError(this, std::string("No records found for host ").append(host).c_str());
                 return;
             }
 
