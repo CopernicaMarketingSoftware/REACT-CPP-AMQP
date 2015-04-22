@@ -21,7 +21,7 @@ class Handler : public React::AMQP::ConnectionHandler
      *  @param  connection  the connection that triggered an error
      *  @param  message     a description of the error
      */
-    virtual void onError(React::AMQP::Connection *connection, const std::string& message)
+    virtual void onError(React::AMQP::Connection *connection, const char *message)
     {
         // report the error
         std:cerr << "Connection error: " << message << std::endl;
