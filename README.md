@@ -79,3 +79,17 @@ int main(int argc, const char *argv[])
 ````
 
 For further information on how to work with the AMQP library, please see the AMQP-CPP documentation.
+
+ABOUT
+=====
+
+REACT-CPP-AMQP library is created and maintained by Copernica (www.copernica.com). 
+Do you appreciate our work and are you looking for other high quality solutions? 
+
+Then check out our other solutions:
+
+* PHP-CPP (www.php-cpp.com)
+* PHP-JS (www.php-js.com)
+* Copernica Marketing Suite (www.copernica.com)
+* MailerQ MTA (www.mailerq.com)
+* Responsive Email web service (www.responsiveemail.com)
