@@ -216,6 +216,10 @@ private:
      */
     void onClosed(::AMQP::Connection *connection) override
     {
+        // no longer need the socket or the input
+        _socket.reset();
+        _input.reset();
+
         // send to the handler
         if (_handler) _handler->onClosed(this);
     }
