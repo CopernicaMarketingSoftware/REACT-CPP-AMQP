@@ -295,6 +295,15 @@ public:
         return _connection.close();
     }
 
+    /**
+     *  Retrieve the amount of active channels
+     *  @return std::size_t
+     */
+    std::size_t channels() const
+    {
+        return _connection.channels();
+    }
+
     // we are friends with the handler and the channel
     friend class ConnectionHandler;
     friend class Channel;
